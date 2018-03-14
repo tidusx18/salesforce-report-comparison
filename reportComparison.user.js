@@ -16,7 +16,7 @@
 
 
   const recordId = 'Class ID';
-  const localStorageId = 'CourseList';
+  const localStorageId = window.location.pathname.substr( 1 );
   const headerSelector = '#headerRow_0';
   const lastUpdatedId = 'output_last_updated';
   const newCoursesId = 'output_new_courses';
