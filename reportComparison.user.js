@@ -4,20 +4,19 @@
 // @version      0.0.1
 // @description  Check for updated salesforce course records
 // @author       Matt Thomson <mthomson.lee@gmail.com>
-// @match        https://fiuonline.my.salesforce.com/00O0G000007HhmQ
+// @author       Daniel Victoriano <victoriano518@gmail.com>
+// @match        https://fiuonline.lightning.force.com/lightning/r/Report/*
 // @grant        none
 // ==/UserScript==
 
 /* MIT License */
 
-/* Customized for specific record */
-
 ( function() {
 
 
-  const recordId = 'Class ID';
+  const recordId = 'CLASS ID\n';
   const localStorageId = window.location.pathname.substr( 1 );
-  const headerSelector = '#headerRow_0';
+  const headerSelector = '.headerRow .sortHeader';
   const lastUpdatedId = 'output_last_updated';
   const newCoursesId = 'output_new_courses';
   const updatedCoursesId = 'output_updated_courses';
@@ -25,10 +24,9 @@
   const deletedCSSClass = 'deleted_course';
   const reduceNode = d => d.innerText;
   const transformRecord = d => nodeListToArray( d.querySelectorAll( 'td' ) );
-  const getHeaders = selector => nodeListToArray( document.querySelector( selector ).children )
-      .map( reduceNode );
+  const getHeaders = selector => nodeListToArray( document.querySelectorAll( selector ) ).map( reduceNode );
   const nodeListToArray = nodeList => Array.prototype.slice.call( nodeList );
-  const filterRecordDom = d => !( d.classList.contains( 'breakRowClass0' ) || d.classList.contains( 'grandTotal' ) || d.classList.contains( deletedCSSClass ) );
+  const filterRecordDom = d => !( d.classList.contains( deletedCSSClass ) );
   const createKeyValue = ( keys, values ) => {
 
     if ( keys.length !== values.length ) {
@@ -55,6 +53,8 @@
 
     for ( let i = 0; i < arr.length; i++ ) {
 
+    // if( arr[i] === null ) { continue; }
+
       const key = arr[ i ][ keyField ];
       obj[ key ] = arr[ i ];
 
@@ -65,13 +65,28 @@
   };
 
 
-  const headers = getHeaders( headerSelector );
-  const getHeaderIndex = key => headers.findIndex( d => d === key );
+  let headers;
+  let getHeaderIndex = key => headers.findIndex( d => d === key );
 
-  main();
+  let observer = new MutationObserver( (mutationList, observer) => {
+
+    mutationList.forEach( mutation => {
+
+      if(mutation.target.className == 'reportTitle') {
+
+        main();
+        observer.disconnect();
+
+      }
+
+    });
+  });
+
+  observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
 
   function main() {
 
+  headers = getHeaders( headerSelector );
     const saveBtn = createBtn( 'Save Records', e => {
 
       e.preventDefault();
@@ -230,7 +245,7 @@
 
         recordNode.classList.add( deletedCSSClass );
 
-        document.querySelector( '#fchArea > table > tbody' ).appendChild( recordNode );
+        document.querySelector( '.reportTable > tbody' ).appendChild( recordNode );
 
       }
 
@@ -246,7 +261,7 @@
 
     } );
 
-    const parentSelector = '#groupBreadcrumbs';
+    const parentSelector = '.reportsMetricsHeader';
     const parent = document.querySelector( parentSelector );
     parent.insertBefore( buildOutput(), parent.firstChild );
     parent.insertBefore( saveBtn, parent.firstChild );
@@ -268,7 +283,8 @@
     updatedCourses.id = updatedCoursesId;
     deletedCourses.id = deletedCoursesId;
 
-    wrapper.appendChild( lastUpdated );
+    wrapper.setAttribute('style', 'margin: 25px')
+  wrapper.appendChild( lastUpdated );
     wrapper.appendChild( newCourses );
     wrapper.appendChild( updatedCourses );
     wrapper.appendChild( deletedCourses );
@@ -299,6 +315,7 @@
   function createBtn( title, clickAction ) {
 
     const btn = document.createElement( 'button' );
+  btn.setAttribute('style', 'margin: 15px 0 0 25px')
     btn.appendChild( document.createTextNode( title ) );
     btn.addEventListener( 'click', clickAction );
 
@@ -308,15 +325,16 @@
 
   function getRecordNodes() {
 
-    const recordsSelector = '#fchArea > table > tbody > tr';
+    const recordsSelector = '.reportTable > tbody > tr.dataRow';
 
     return nodeListToArray( document.querySelectorAll( recordsSelector ) )
-      .slice( 1 )
       .filter( filterRecordDom );
 
   }
 
   function getRecords() {
+
+  // const recordsSelector = '.reportTable > tbody > tr.dataRow';
 
     const records = getRecordNodes()
       .map( transformRecord )
