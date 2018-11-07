@@ -14,7 +14,7 @@
 ( function() {
 
 
-  const recordId = 'CLASS ID\n';
+  const recordId = 'CLASS ID';
   const localStorageId = window.location.pathname.substr( 1 );
   const headerSelector = '.headerRow .sortHeader';
   const lastUpdatedId = 'output_last_updated';
@@ -22,7 +22,7 @@
   const updatedCoursesId = 'output_updated_courses';
   const deletedCoursesId = 'output_deleted_courses';
   const deletedCSSClass = 'deleted_course';
-  const reduceNode = d => d.innerText;
+  const reduceNode = d => d.innerText.trim();
   const transformRecord = d => nodeListToArray( d.querySelectorAll( 'td' ) );
   const getHeaders = selector => nodeListToArray( document.querySelectorAll( selector ) ).map( reduceNode );
   const nodeListToArray = nodeList => Array.prototype.slice.call( nodeList );
@@ -97,6 +97,8 @@
         records: getRecords()
 
       };
+
+		console.log(data)
 
       localStorage.setItem( localStorageId, JSON.stringify( data ) );
 
@@ -197,7 +199,7 @@
         const updatedFields = added[ recordKey ];
 
         const idIndex = getHeaderIndex( recordId );
-        const node = nodes.find( d => nodeListToArray( d.querySelectorAll( 'td' ) )[ idIndex ].innerText === recordKey );
+        const node = nodes.find( d => nodeListToArray( d.querySelectorAll( 'td' ) )[ idIndex ].innerText.trim() === recordKey );
         addedCount++;
 
         for ( const fieldKey in updatedFields ) {
@@ -215,7 +217,7 @@
         const updatedFields = updates[ recordKey ];
 
         const idIndex = getHeaderIndex( recordId );
-        const node = nodes.find( d => nodeListToArray( d.querySelectorAll( 'td' ) )[ idIndex ].innerText === recordKey );
+        const node = nodes.find( d => nodeListToArray( d.querySelectorAll( 'td' ) )[ idIndex ].innerText.trim() === recordKey );
         updatedCount++;
 
         for ( const fieldKey in updatedFields ) {
